@@ -1,10 +1,11 @@
 package com.github.xasoek.hh_service.service;
 
-import com.github.xasoek.hh_service.entity.Job;
+import com.github.xasoek.hh_service.dto.CreateJobRequest;
+import com.github.xasoek.hh_service.dto.JobResponse;
+
 import java.util.List;
 
 public interface JobService {
-    Job create(Job job);
-
-    List<Job> getAll();
+    JobResponse create(CreateJobRequest job);
+    List<JobResponse> getAll();
 }

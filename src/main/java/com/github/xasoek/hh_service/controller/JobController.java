@@ -1,7 +1,8 @@
 package com.github.xasoek.hh_service.controller;
 
-import com.github.xasoek.hh_service.entity.Job;
-import com.github.xasoek.hh_service.repository.JobRepository;
+import com.github.xasoek.hh_service.dto.CreateJobRequest;
+import com.github.xasoek.hh_service.dto.JobResponse;
+import com.github.xasoek.hh_service.service.JobService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -9,20 +10,20 @@ import java.util.List;
 @RestController
 @RequestMapping("/jobs")
 public class JobController {
-    private final JobRepository jobRepository;
 
-    public JobController(JobRepository jobRepository) {
-        this.jobRepository = jobRepository;
+    private final JobService service;
+
+    public JobController(JobService service) {
+        this.service = service;
     }
 
     @PostMapping
-    public Job create(@RequestBody Job job) {
-        return jobRepository.save(job);
+    public JobResponse create(@RequestBody CreateJobRequest request) {
+        return service.create(request);
     }
 
     @GetMapping
-    public List<Job> getAll() {
-        return jobRepository.findAll();
+    public List<JobResponse> getAll() {
+        return service.getAll();
     }
-
 }
