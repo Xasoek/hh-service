@@ -1,10 +1,14 @@
 package com.github.xasoek.hh_service.dto;
 
 import lombok.Data;
+import jakarta.validation.constraints.NotNull;
 
 @Data
 public class CreateApplicationRequest {
-    private Long userId;
-    private Long jobId;
 
+    @NotNull
+    public Long userId;
+
+    @NotNull
+    public Long jobId;
 }

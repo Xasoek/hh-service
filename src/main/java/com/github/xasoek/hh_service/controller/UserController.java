@@ -4,6 +4,7 @@ import com.github.xasoek.hh_service.dto.CreateUserRequest;
 import com.github.xasoek.hh_service.dto.UserResponse;
 import com.github.xasoek.hh_service.entity.User;
 import com.github.xasoek.hh_service.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public class UserController {
     }
 
     @PostMapping
-    public UserResponse create(@RequestBody CreateUserRequest request) {
+    public UserResponse create(@Valid @RequestBody CreateUserRequest request) {
         return service.create(request);
     }
 

@@ -4,6 +4,9 @@ import com.github.xasoek.hh_service.entity.ApplicationStatus;
 import com.github.xasoek.hh_service.entity.Job;
 import com.github.xasoek.hh_service.entity.JobApplication;
 import com.github.xasoek.hh_service.entity.User;
+import com.github.xasoek.hh_service.exception.ApplicationNotFoundException;
+import com.github.xasoek.hh_service.exception.JobNotFoundException;
+import com.github.xasoek.hh_service.exception.UserNotFoundException;
 import com.github.xasoek.hh_service.repository.JobApplicationRepository;
 import com.github.xasoek.hh_service.repository.JobRepository;
 import com.github.xasoek.hh_service.repository.UserRepository;
@@ -33,10 +36,10 @@ public class JobApplicationServiceImpl implements JobApplicationService {
     public JobApplication create(Long userId, Long jobId) {
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
 
         Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new IllegalArgumentException("Job not found with id: " + jobId));
+                .orElseThrow(() -> new JobNotFoundException("Job not found with id: " + jobId));
 
         boolean alreadyApplied = jobApplicationRepository
                 .existsByUserIdAndJobId(userId, jobId);
@@ -56,5 +59,13 @@ public class JobApplicationServiceImpl implements JobApplicationService {
     @Override
     public List<JobApplication> getAll() {
         return jobApplicationRepository.findAll();
+    }
+
+    @Override
+    public JobApplication updateStatus(Long applicationId, String status) {
+        JobApplication jobApplication = jobApplicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ApplicationNotFoundException("Application not found"));
+        jobApplication.setStatus(ApplicationStatus.valueOf(status));
+        return jobApplicationRepository.save(jobApplication);
     }
 }

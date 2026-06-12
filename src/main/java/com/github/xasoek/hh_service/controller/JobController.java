@@ -3,6 +3,7 @@ package com.github.xasoek.hh_service.controller;
 import com.github.xasoek.hh_service.dto.CreateJobRequest;
 import com.github.xasoek.hh_service.dto.JobResponse;
 import com.github.xasoek.hh_service.service.JobService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public class JobController {
     }
 
     @PostMapping
-    public JobResponse create(@RequestBody CreateJobRequest request) {
+    public JobResponse create(@Valid @RequestBody CreateJobRequest request) {
         return service.create(request);
     }
 

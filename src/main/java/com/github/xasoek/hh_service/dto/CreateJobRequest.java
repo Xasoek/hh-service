@@ -1,15 +1,20 @@
 package com.github.xasoek.hh_service.dto;
 
 import lombok.Data;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 
 @Data
 public class CreateJobRequest {
 
-    private String title;
+    @NotBlank
+    public String title;
 
-    private String company;
+    @NotBlank
+    public String company;
 
-    private String description;
+    @Min(0)
+    public int salary;
 
-    private Integer salary;
+    public String description;
 }

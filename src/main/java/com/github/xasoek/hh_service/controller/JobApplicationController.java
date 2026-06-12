@@ -4,6 +4,7 @@ import com.github.xasoek.hh_service.dto.ApplicationResponse;
 import com.github.xasoek.hh_service.dto.CreateApplicationRequest;
 import com.github.xasoek.hh_service.entity.JobApplication;
 import com.github.xasoek.hh_service.service.JobApplicationService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public class JobApplicationController {
         this.service = jobApplicationService;
     }
     @PostMapping
-    public ApplicationResponse create(@RequestBody CreateApplicationRequest request) {
+    public ApplicationResponse create(@Valid @RequestBody CreateApplicationRequest request) {
         JobApplication app = service.create(request.getUserId(), request.getJobId());
         return toResponse(app);
     }
@@ -40,4 +41,9 @@ public class JobApplicationController {
         return response;
     }
 
+    @PutMapping("/{id}/status")
+    public ApplicationResponse updateStatus(@PathVariable Long id, @RequestParam String status) {
+        JobApplication application = service.updateStatus(id, status);
+        return toResponse(application);
+    }
 }
