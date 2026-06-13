@@ -1,5 +1,6 @@
 package com.github.xasoek.hh_service.service.impl;
 
+import com.github.xasoek.hh_service.dto.ApplicationResponse;
 import com.github.xasoek.hh_service.entity.ApplicationStatus;
 import com.github.xasoek.hh_service.entity.Job;
 import com.github.xasoek.hh_service.entity.JobApplication;
@@ -7,10 +8,14 @@ import com.github.xasoek.hh_service.entity.User;
 import com.github.xasoek.hh_service.exception.ApplicationNotFoundException;
 import com.github.xasoek.hh_service.exception.JobNotFoundException;
 import com.github.xasoek.hh_service.exception.UserNotFoundException;
+import com.github.xasoek.hh_service.exception.InvalidStatusException;
+import com.github.xasoek.hh_service.mapper.ApplicationMapper;
 import com.github.xasoek.hh_service.repository.JobApplicationRepository;
 import com.github.xasoek.hh_service.repository.JobRepository;
 import com.github.xasoek.hh_service.repository.UserRepository;
 import com.github.xasoek.hh_service.service.JobApplicationService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,39 +38,72 @@ public class JobApplicationServiceImpl implements JobApplicationService {
     }
 
     @Override
-    public JobApplication create(Long userId, Long jobId) {
+    public ApplicationResponse create(Long userId, Long jobId) {
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new JobNotFoundException("Job not found with id: " + jobId));
+                .orElseThrow(() -> new JobNotFoundException("Job not found"));
 
-        boolean alreadyApplied = jobApplicationRepository
-                .existsByUserIdAndJobId(userId, jobId);
+        JobApplication app = new JobApplication();
+        app.setUser(user);
+        app.setJob(job);
+        app.setStatus(ApplicationStatus.SENT);
 
-        if (alreadyApplied) {
-            throw new IllegalStateException("User already applied for this job");
-        }
+        JobApplication saved = jobApplicationRepository.save(app);
 
-        JobApplication application = new JobApplication();
-        application.setUser(user);
-        application.setJob(job);
-        application.setStatus(ApplicationStatus.SENT);
-
-        return jobApplicationRepository.save(application);
+        return ApplicationMapper.toResponse(saved);
     }
 
     @Override
-    public List<JobApplication> getAll() {
-        return jobApplicationRepository.findAll();
+    public List<ApplicationResponse> getAll() {
+        return jobApplicationRepository.findAll()
+                .stream()
+                .map(ApplicationMapper::toResponse)
+                .toList();
     }
 
     @Override
-    public JobApplication updateStatus(Long applicationId, String status) {
+    public ApplicationResponse updateStatus(Long applicationId, String status) {
+
         JobApplication jobApplication = jobApplicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ApplicationNotFoundException("Application not found"));
-        jobApplication.setStatus(ApplicationStatus.valueOf(status));
-        return jobApplicationRepository.save(jobApplication);
+
+        ApplicationStatus statusEnum = parseStatus(status);
+
+        jobApplication.setStatus(statusEnum);
+
+        JobApplication saved = jobApplicationRepository.save(jobApplication);
+
+        return ApplicationMapper.toResponse(saved);
+    }
+
+    @Override
+    public Page<ApplicationResponse> getByUserId(Long userId, Pageable pageable) {
+        return jobApplicationRepository.findByUserId(userId, pageable)
+                .map(ApplicationMapper::toResponse);
+    }
+
+    @Override
+    public Page<ApplicationResponse> getByJobId(Long jobId, Pageable pageable) {
+        return jobApplicationRepository.findByJobId(jobId, pageable)
+                .map(ApplicationMapper::toResponse);
+    }
+
+    @Override
+    public Page<ApplicationResponse> getByStatus(String status, Pageable pageable) {
+        ApplicationStatus statusEnum = parseStatus(status);
+
+        return jobApplicationRepository.findByStatus(statusEnum, pageable)
+                .map(ApplicationMapper::toResponse);
+    }
+
+    private ApplicationStatus parseStatus(String status) {
+        try {
+            return ApplicationStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new InvalidStatusException("Invalid status: " + status);
+        }
     }
 }

@@ -2,48 +2,56 @@ package com.github.xasoek.hh_service.controller;
 
 import com.github.xasoek.hh_service.dto.ApplicationResponse;
 import com.github.xasoek.hh_service.dto.CreateApplicationRequest;
-import com.github.xasoek.hh_service.entity.JobApplication;
+import com.github.xasoek.hh_service.mapper.ApplicationMapper;
 import com.github.xasoek.hh_service.service.JobApplicationService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static com.github.xasoek.hh_service.mapper.ApplicationMapper.toResponse;
-
 @RestController
 @RequestMapping("/applications")
 public class JobApplicationController {
+
     private final JobApplicationService service;
-    public JobApplicationController(JobApplicationService jobApplicationService) {
-        this.service = jobApplicationService;
+
+    public JobApplicationController(JobApplicationService service) {
+        this.service = service;
     }
+
     @PostMapping
-    public ApplicationResponse create(@Valid @RequestBody CreateApplicationRequest request) {
-        JobApplication app = service.create(request.getUserId(), request.getJobId());
-        return toResponse(app);
+    public ApplicationResponse create(@RequestBody CreateApplicationRequest request) {
+        return service.create(request.getUserId(), request.getJobId());
     }
 
     @GetMapping
     public List<ApplicationResponse> getAll() {
-        return service.getAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    private ApplicationResponse toResponse(JobApplication app) {
-        ApplicationResponse response = new ApplicationResponse();
-        response.setId(app.getId());
-        response.setStatus(app.getStatus().name());
-        response.setUserId(app.getUser().getId());
-        response.setJobId((app.getJob().getId()));
-        return response;
+        return service.getAll();
     }
 
     @PutMapping("/{id}/status")
-    public ApplicationResponse updateStatus(@PathVariable Long id, @RequestParam String status) {
-        JobApplication application = service.updateStatus(id, status);
-        return toResponse(application);
+    public ApplicationResponse updateStatus(
+            @PathVariable Long id,
+            @RequestParam String status
+    ) {
+        return service.updateStatus(id, status);
+    }
+
+    @GetMapping("/user/{userId}")
+    public Page<ApplicationResponse> getByUser(
+            @PathVariable Long userId,
+            Pageable pageable
+    ) {
+        return service.getByUserId(userId, pageable);
+    }
+
+    @GetMapping("/job/{jobId}")
+    public Page<ApplicationResponse> getByJob(
+            @PathVariable Long jobId,
+            Pageable pageable
+    ) {
+        return service.getByJobId(jobId, pageable);
     }
 }

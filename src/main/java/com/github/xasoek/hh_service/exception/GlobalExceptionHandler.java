@@ -1,6 +1,7 @@
 package com.github.xasoek.hh_service.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,5 +33,13 @@ public class GlobalExceptionHandler {
                 );
 
         return errors;
+    }
+
+    @ExceptionHandler(InvalidStatusException.class)
+
+    public ResponseEntity<String> handleInvalidStatus(InvalidStatusException ex) {
+
+        return ResponseEntity.badRequest().body(ex.getMessage());
+
     }
 }
