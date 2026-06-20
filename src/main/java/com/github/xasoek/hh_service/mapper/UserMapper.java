@@ -1,6 +1,7 @@
 package com.github.xasoek.hh_service.mapper;
 
 import com.github.xasoek.hh_service.dto.CreateUserRequest;
+import com.github.xasoek.hh_service.entity.Role;
 import com.github.xasoek.hh_service.dto.UserResponse;
 import com.github.xasoek.hh_service.entity.User;
 
@@ -9,6 +10,7 @@ public class UserMapper {
         User user = new User();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
+        user.setRole(request.getRole() == null ? Role.USER : request.getRole());
         return user;
     }
     public static UserResponse toResponse(User user) {

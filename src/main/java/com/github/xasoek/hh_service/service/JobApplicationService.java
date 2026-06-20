@@ -12,7 +12,7 @@ public interface JobApplicationService {
 
     List<ApplicationResponse> getAll();
 
-    ApplicationResponse create(Long userId, Long jobId);
+    ApplicationResponse create(Long jobId);
 
     ApplicationResponse updateStatus(Long applicationId, String status);
 

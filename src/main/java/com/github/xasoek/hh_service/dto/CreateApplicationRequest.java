@@ -7,8 +7,5 @@ import jakarta.validation.constraints.NotNull;
 public class CreateApplicationRequest {
 
     @NotNull
-    public Long userId;
-
-    @NotNull
     public Long jobId;
 }

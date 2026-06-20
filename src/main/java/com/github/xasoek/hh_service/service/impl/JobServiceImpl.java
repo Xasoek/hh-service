@@ -5,11 +5,13 @@ import com.github.xasoek.hh_service.dto.JobResponse;
 import com.github.xasoek.hh_service.entity.Job;
 import com.github.xasoek.hh_service.entity.Role;
 import com.github.xasoek.hh_service.entity.User;
+import com.github.xasoek.hh_service.exception.UserNotFoundException;
 import com.github.xasoek.hh_service.mapper.JobMapper;
 import com.github.xasoek.hh_service.repository.JobRepository;
 import com.github.xasoek.hh_service.repository.UserRepository;
 import com.github.xasoek.hh_service.security.SecurityUtil;
 import com.github.xasoek.hh_service.service.JobService;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,15 +29,19 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public JobResponse create(CreateJobRequest request) {
+
         User user = userRepository.findByEmail(
                         SecurityUtil.getCurrentUserEmail()
                 )
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
         if (user.getRole() != Role.HR) {
-            throw new RuntimeException("Only HR can create jobs");
+            throw new AccessDeniedException("Only HR can create jobs");
         }
+
         Job job = JobMapper.toEntity(request);
         Job savedJob = jobRepository.save(job);
+
         return JobMapper.toResponse(savedJob);
     }
 

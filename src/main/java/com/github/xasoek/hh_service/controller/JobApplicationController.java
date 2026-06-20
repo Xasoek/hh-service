@@ -2,7 +2,6 @@ package com.github.xasoek.hh_service.controller;
 
 import com.github.xasoek.hh_service.dto.ApplicationResponse;
 import com.github.xasoek.hh_service.dto.CreateApplicationRequest;
-import com.github.xasoek.hh_service.mapper.ApplicationMapper;
 import com.github.xasoek.hh_service.service.JobApplicationService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -22,8 +21,8 @@ public class JobApplicationController {
     }
 
     @PostMapping
-    public ApplicationResponse create(@RequestBody CreateApplicationRequest request) {
-        return service.create(request.getUserId(), request.getJobId());
+    public ApplicationResponse create(@Valid @RequestBody CreateApplicationRequest request) {
+        return service.create(request.getJobId());
     }
 
     @GetMapping

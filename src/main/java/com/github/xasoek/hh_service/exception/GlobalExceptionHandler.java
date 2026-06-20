@@ -2,6 +2,7 @@ package com.github.xasoek.hh_service.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +15,50 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> handleUserNotFound(
             UserNotFoundException ex) {
+
+        return Map.of(
+                "message",
+                ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(JobNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleJobNotFound(
+            JobNotFoundException ex) {
+
+        return Map.of(
+                "message",
+                ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(ApplicationNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleApplicationNotFound(
+            ApplicationNotFoundException ex) {
+
+        return Map.of(
+                "message",
+                ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(DuplicateApplicationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, String> handleDuplicateApplication(
+            DuplicateApplicationException ex) {
+
+        return Map.of(
+                "message",
+                ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Map<String, String> handleAccessDenied(
+            AccessDeniedException ex) {
 
         return Map.of(
                 "message",
@@ -37,9 +82,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidStatusException.class)
 
-    public ResponseEntity<String> handleInvalidStatus(InvalidStatusException ex) {
+    public ResponseEntity<Map<String, String>> handleInvalidStatus(InvalidStatusException ex) {
 
-        return ResponseEntity.badRequest().body(ex.getMessage());
+        return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
 
     }
 }

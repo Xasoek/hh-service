@@ -4,8 +4,10 @@ import com.github.xasoek.hh_service.dto.ApplicationResponse;
 import com.github.xasoek.hh_service.entity.ApplicationStatus;
 import com.github.xasoek.hh_service.entity.Job;
 import com.github.xasoek.hh_service.entity.JobApplication;
+import com.github.xasoek.hh_service.entity.Role;
 import com.github.xasoek.hh_service.entity.User;
 import com.github.xasoek.hh_service.exception.ApplicationNotFoundException;
+import com.github.xasoek.hh_service.exception.DuplicateApplicationException;
 import com.github.xasoek.hh_service.exception.JobNotFoundException;
 import com.github.xasoek.hh_service.exception.UserNotFoundException;
 import com.github.xasoek.hh_service.exception.InvalidStatusException;
@@ -13,9 +15,11 @@ import com.github.xasoek.hh_service.mapper.ApplicationMapper;
 import com.github.xasoek.hh_service.repository.JobApplicationRepository;
 import com.github.xasoek.hh_service.repository.JobRepository;
 import com.github.xasoek.hh_service.repository.UserRepository;
+import com.github.xasoek.hh_service.security.SecurityUtil;
 import com.github.xasoek.hh_service.service.JobApplicationService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,13 +42,20 @@ public class JobApplicationServiceImpl implements JobApplicationService {
     }
 
     @Override
-    public ApplicationResponse create(Long userId, Long jobId) {
+    public ApplicationResponse create(Long jobId) {
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = getCurrentUser();
+
+        if (user.getRole() != Role.USER) {
+            throw new AccessDeniedException("Only users can apply to jobs");
+        }
 
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new JobNotFoundException("Job not found"));
+
+        if (jobApplicationRepository.existsByUserIdAndJobId(user.getId(), job.getId())) {
+            throw new DuplicateApplicationException("Application already exists");
+        }
 
         JobApplication app = new JobApplication();
         app.setUser(user);
@@ -58,6 +69,8 @@ public class JobApplicationServiceImpl implements JobApplicationService {
 
     @Override
     public List<ApplicationResponse> getAll() {
+        ensureHr();
+
         return jobApplicationRepository.findAll()
                 .stream()
                 .map(ApplicationMapper::toResponse)
@@ -66,6 +79,7 @@ public class JobApplicationServiceImpl implements JobApplicationService {
 
     @Override
     public ApplicationResponse updateStatus(Long applicationId, String status) {
+        ensureHr();
 
         JobApplication jobApplication = jobApplicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ApplicationNotFoundException("Application not found"));
@@ -81,18 +95,28 @@ public class JobApplicationServiceImpl implements JobApplicationService {
 
     @Override
     public Page<ApplicationResponse> getByUserId(Long userId, Pageable pageable) {
+        User currentUser = getCurrentUser();
+
+        if (currentUser.getRole() != Role.HR && !currentUser.getId().equals(userId)) {
+            throw new AccessDeniedException("Users can view only their own applications");
+        }
+
         return jobApplicationRepository.findByUserId(userId, pageable)
                 .map(ApplicationMapper::toResponse);
     }
 
     @Override
     public Page<ApplicationResponse> getByJobId(Long jobId, Pageable pageable) {
+        ensureHr();
+
         return jobApplicationRepository.findByJobId(jobId, pageable)
                 .map(ApplicationMapper::toResponse);
     }
 
     @Override
     public Page<ApplicationResponse> getByStatus(String status, Pageable pageable) {
+        ensureHr();
+
         ApplicationStatus statusEnum = parseStatus(status);
 
         return jobApplicationRepository.findByStatus(statusEnum, pageable)
@@ -102,8 +126,21 @@ public class JobApplicationServiceImpl implements JobApplicationService {
     private ApplicationStatus parseStatus(String status) {
         try {
             return ApplicationStatus.valueOf(status.toUpperCase());
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | NullPointerException e) {
             throw new InvalidStatusException("Invalid status: " + status);
+        }
+    }
+
+    private User getCurrentUser() {
+        return userRepository.findByEmail(SecurityUtil.getCurrentUserEmail())
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    }
+
+    private void ensureHr() {
+        User user = getCurrentUser();
+
+        if (user.getRole() != Role.HR) {
+            throw new AccessDeniedException("Only HR can perform this action");
         }
     }
 }
